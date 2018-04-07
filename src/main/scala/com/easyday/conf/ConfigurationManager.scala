@@ -23,5 +23,7 @@ object ConfigurationManager {
   def getBoolean(value:String) :Boolean ={
     prop.getProperty(value).toBoolean
   }
-
+  def getLong(value:String) :Long={
+    prop.getProperty(value).toLong
+  }
 }

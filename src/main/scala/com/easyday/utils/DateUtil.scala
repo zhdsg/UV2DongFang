@@ -8,18 +8,21 @@ import java.util.{Date, Calendar}
  */
 object DateUtil {
 
-  val DATE_FORMAT =new SimpleDateFormat("yyyyMMdd")
-
+  val DT_FORMAT =new SimpleDateFormat("yyyyMMdd")
+  val TIME_FORMAT =new SimpleDateFormat("yyyy-MM-dd 00:00:00")
+  val DATE_FORMAT =new SimpleDateFormat("yyyy-MM-dd 00:00:00")
   def getYesterdayDate():String={
     val  cal :Calendar =Calendar.getInstance()
     cal.setTime(new Date())
     cal.add(Calendar.DAY_OF_YEAR,-1)
 
-    DATE_FORMAT.format(cal.getTime)
+    DT_FORMAT.format(cal.getTime)
   }
   def getTodayDate() :String ={
-    DATE_FORMAT.format(new Date())
+    DT_FORMAT.format(new Date())
   }
-
+  def getZeroTime(date :Date):Date={
+    TIME_FORMAT.parse(DATE_FORMAT.format(date))
+  }
 
 }
