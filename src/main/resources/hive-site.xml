@@ -393,7 +393,7 @@
   </property>
   <property>
     <name>javax.jdo.option.ConnectionURL</name>
-    <value>jdbc:mysql://hadoop-sh1-master2:3306/hive?createDatabaseIfNotExist=true</value>
+    <value>jdbc:mysql://hadoop-sh1-master2:3306/hive?createDatabaseIfNotExist=true&amp;useSSL=false&amp;nullNamePatternMatchesAll=true</value>
     <description>JDBC connect string for a JDBC metastore</description>
   </property>
   <property>
