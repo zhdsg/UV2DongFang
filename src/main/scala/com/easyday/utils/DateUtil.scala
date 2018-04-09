@@ -9,20 +9,91 @@ import java.util.{Date, Calendar}
 object DateUtil {
 
   val DT_FORMAT =new SimpleDateFormat("yyyyMMdd")
-  val TIME_FORMAT =new SimpleDateFormat("yyyy-MM-dd 00:00:00")
+  val TIME_FORMAT =new SimpleDateFormat("yyyy-MM-dd")
   val DATE_FORMAT =new SimpleDateFormat("yyyy-MM-dd 00:00:00")
-  def getYesterdayDate():String={
+  val CURRENT_DATE_FORMAT=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+
+  def getYesterdayDate(date :Date):String={
     val  cal :Calendar =Calendar.getInstance()
-    cal.setTime(new Date())
+    cal.setTime(date)
     cal.add(Calendar.DAY_OF_YEAR,-1)
 
     DT_FORMAT.format(cal.getTime)
   }
-  def getTodayDate() :String ={
-    DT_FORMAT.format(new Date())
+
+  /**
+   * 规整格式yyyyMMdd
+   * @return
+   */
+  def getTodayDate(date :Date) :String ={
+    DT_FORMAT.format(date)
   }
-  def getZeroTime(date :Date):Date={
-    TIME_FORMAT.parse(DATE_FORMAT.format(date))
+  /**
+   * 规整格式yyyyMMdd
+   * @return
+   */
+  def getTodayDate(date :String) :String ={
+    getTodayDate(str2Date(date))
   }
 
+  /**
+   * 字符串转时间
+   * @param date
+   * @return
+   */
+  def str2Date(date :String):Date={
+    CURRENT_DATE_FORMAT.parse(date)
+  }
+
+  /**
+   * 日期转字符串
+   * @param date
+   * @return
+   */
+  def date2Str(date :Date):String={
+    CURRENT_DATE_FORMAT.format(date)
+  }
+
+  /**
+   * 获取date的零时零分零秒
+   * @param date
+   * @return
+   */
+  def getZeroTime(date :String):Date={
+    CURRENT_DATE_FORMAT.parse(date.substring(0,10)+" 00:00:00")
+  }
+  def getZeroTime(date :Date):Date={
+    getZeroTime(date2Str(date))
+  }
+  /**
+   * 将分钟取整，10的倍数,秒数取00
+   * 如2018-04-09 11:11:11 -> 2018-04-09 11:10:00
+   * @param date
+   * @return  字符串
+   */
+  def trimDate(date :String):String ={
+    val day =date.split(" ")(0)
+    val time =date.split(" ")(1)
+    val hour =time.split(":")(0)
+    val mm =s"${time.split(":")(1).substring(0,1)}0"
+    s"${day} ${hour}:${mm}:00"
+  }
+
+  /**
+   *将分钟取整，10的倍数,秒数取00
+   * 如2018-04-09 11:11:11 -> 2018-04-09 11:10:00
+   * @param date1
+   * @return Date
+   */
+  def trimDate(date1 :Date):String ={
+    val date =date2Str(date1)
+    val day =date.split(" ")(0)
+    val time =date.split(" ")(1)
+    val hour =time.split(":")(0)
+    val mm =s"${time.split(":")(1).substring(0,1)}0"
+    s"${day} ${hour}:${mm}:00"
+  }
+  def main(args: Array[String]) {
+    println(DateUtil.getZeroTime(str2Date("2018-04-08 23:50:00")))
+  }
 }

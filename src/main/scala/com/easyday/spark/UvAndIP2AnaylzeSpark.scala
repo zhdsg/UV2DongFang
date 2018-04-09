@@ -1,6 +1,6 @@
 package com.easyday.spark
 
-import java.util.Date
+import java.util.{Random, Date}
 
 import com.easyday.conf.ConfigurationManager
 import com.easyday.constract.Constract
@@ -33,84 +33,95 @@ object UvAndIP2AnaylzeSpark {
       .enableHiveSupport()
       .getOrCreate()
     import spark.implicits._
-    try {
+//    try {
       //模拟数据
       //mockData(spark)
 
       val data1 = Nil
-      var tmpRDD: RDD[(String, Long)] = sc.parallelize(data1)
+      var tmpRDD: RDD[(String, Int)] = sc.parallelize(data1)
       val zeroTime = DateUtil.getZeroTime(new Date()).getTime / 1000
-      val time_interval = new Date().getTime / 1000 - zeroTime
+      val dateTime =new Date().getTime
+      val time_interval = dateTime / 1000 - zeroTime
+      val  random  =new Random()
       var i: Long = 0
-      for (i <- 1.toLong to time_interval / (ConfigurationManager.getInteger(Constract.TIME_INTERVAL) * 60)) {
+      spark.sql(s"use ${ConfigurationManager.getString(Constract.HIVE_DATABASE)}")
+      spark.sql(s"set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;")
 
-        spark.sql(s"use ${ConfigurationManager.getString(Constract.HIVE_DATABASE)}")
-        spark.sql(s"set hive.input.format=org.apache.hadoop.hive.ql.io.CombineHiveInputFormat;")
+      for (i <- 1.toLong to time_interval / (ConfigurationManager.getInteger(Constract.TIME_INTERVAL) * 60)) {
+        //拉去数据，每十分钟拉一次
         val data: Dataset[Row] = spark.sql(s"select dateline,clientip,qid,uid from " +
           //  s"${ConfigurationManager.getString(Constract.HIVE_DATABASE)}." +
           s"${ConfigurationManager.getString(Constract.HIVE_TABLE)} " +
-          s"where dt ='${DateUtil.getTodayDate()}' " +
+          s"where dt ='${DateUtil.getTodayDate(new Date())}' " +
           s"and dateline >='${zeroTime + (i - 1) * (ConfigurationManager.getInteger(Constract.TIME_INTERVAL) * 60)}' " +
           s"and dateline < '${zeroTime + i * (ConfigurationManager.getInteger(Constract.TIME_INTERVAL) * 60)}' ")
-        data.show(20)
+       // data.show(20)
         val dataRDD = data.rdd
 
-        val uidRDDqid: RDD[(String, Long)] = dataRDD.map(
+        //将key拼接成uid!qid
+        val uidRDDqid: RDD[(String, Int)] = dataRDD.map(
           row => {
-            val key = s"${row.getString(2)}_${row.getString(3)}"
-            (key, 1.toLong)
+            val key = s"${row.getString(3)}!${row.getString(2)}"
+            (key, 0)
           }
         )
-        val groupbyUidQidRDD: RDD[(String, Long)] = uidRDDqid.reduceByKey(_ + _)
+        //去重
+        val groupbyUidQidRDD: RDD[(String, Int)] = uidRDDqid.reduceByKey(_ + _)
         groupbyUidQidRDD.persist(StorageLevel.MEMORY_ONLY)
         tmpRDD = tmpRDD.union(groupbyUidQidRDD)
         // tmpRDD.persist(StorageLevel.MEMORY_ONLY)
       }
       tmpRDD.persist(StorageLevel.MEMORY_ONLY)
-      //进行聚合
-      val key2QidRDD = tmpRDD.map(
+
+
+      //降数据倾斜聚合 <num+qid,1>
+      val key2NumQidRDD :RDD[(String,Long)]= tmpRDD.map(
         row => {
           val QidAndUid = row._1
-          val qid = QidAndUid.split("_")(0)
+          val numQid = s"${random.nextInt(9)}#${QidAndUid.split("!")(1)}"
+          // val uid = QidAndUid.split("_")(1)
+          (numQid, 1.toLong)
+        }
+      )
+      val numQidAggrRDD: RDD[(String, Long)] = key2NumQidRDD.reduceByKey(_ + _)
+
+      //进行聚合<qid,value>
+      val key2QidRDD :RDD[(String,Long)]= numQidAggrRDD.map(
+        row => {
+          val QidAndUid :String = row._1
+          val value :Long =row._2
+          val qid = QidAndUid.split("#")(1)
          // val uid = QidAndUid.split("_")(1)
-          (qid, 1.toLong)
+          (qid,value)
         }
       )
 
       val groupBYqidRDD: RDD[(String, Long)] = key2QidRDD.reduceByKey(_ + _)
-      //    val resultRDD =groupBYqidRDD.map(
-      //      row => {
-      //        var sum = 0
-      //        val qid =row._1
-      //        val iterator:Iterator[String] = row._2.iterator
-      //        while (iterator.hasNext){
-      //          sum=sum+1
-      //        }
-      //        (qid,sum)
-      //      }
-      //
-      //    )
-      //    data.rdd.checkpoint()
-      //当前时间总UV
-      val key2UidRDD =tmpRDD.map(
+
+      println(groupBYqidRDD.take(10))
+
+      //当前时间总UV (String,Long)
+      val key2UidRDD :RDD[(String,Long)]=tmpRDD.map(
         row =>{
           val QidAndUid = row._1
-         // val qid = QidAndUid.split("_")(0)
-          val uid = QidAndUid.split("_")(1)
+          // val qid = QidAndUid.split("_")(0)
+          val uid = QidAndUid.split("!")(0)
           (uid, 1.toLong)
         }
       )
       val groupBYuidRDD: RDD[(String, Long)] = key2UidRDD.reduceByKey(_ + _)
-      groupBYqidRDD.collect().foreach(row => println(row._1 + "  : " + row._2))
-    }catch{
-      case e :Exception => {
-        throw new Exception(e)
-      }
-    }finally{
-      sc.stop()
-      spark.stop()
-    }
-
+      val sum_UV =groupBYuidRDD.count()
+      println(s"${sum_UV}    |  date =${dateTime}")
+//    }catch{
+//      case e :Exception => {
+//       e.printStackTrace()
+//        System.exit(-1)
+//      }
+//    }finally{
+//
+//    }
+    sc.stop()
+    spark.stop()
 
   }
 

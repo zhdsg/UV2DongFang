@@ -10,5 +10,5 @@ object Constract {
   val HIVE_DATABASE ="hive.database"
   val HIVE_TABLE="hive.table"
   val TIME_INTERVAL ="time.interval"
-
+  val SPARK_SHUFFLE_CONSOLIDATEFILES ="spark.shuffle.consolidateFiles"
 }
