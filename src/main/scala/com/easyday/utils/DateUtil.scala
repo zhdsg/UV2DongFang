@@ -10,7 +10,6 @@ object DateUtil {
 
   val DT_FORMAT =new SimpleDateFormat("yyyyMMdd")
   val TIME_FORMAT =new SimpleDateFormat("yyyy-MM-dd")
-  val DATE_FORMAT =new SimpleDateFormat("yyyy-MM-dd 00:00:00")
   val CURRENT_DATE_FORMAT=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
   def getYesterdayDate(date :Date):String={
@@ -87,13 +86,9 @@ object DateUtil {
    */
   def trimDate(date1 :Date):String ={
     val date =date2Str(date1)
-    val day =date.split(" ")(0)
-    val time =date.split(" ")(1)
-    val hour =time.split(":")(0)
-    val mm =s"${time.split(":")(1).substring(0,1)}0"
-    s"${day} ${hour}:${mm}:00"
+    trimDate(date)
   }
   def main(args: Array[String]) {
-    println(DateUtil.getZeroTime(str2Date("2018-04-08 23:50:00")))
+    println(DateUtil.str2Date(DateUtil.trimDate(new StringBuffer("2018-04-09 00:20:00").toString)).getTime/1000)
   }
 }
