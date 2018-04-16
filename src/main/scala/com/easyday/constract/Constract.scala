@@ -11,4 +11,16 @@ object Constract {
   val HIVE_TABLE="hive.table"
   val TIME_INTERVAL ="time.interval"
   val SPARK_SHUFFLE_CONSOLIDATEFILES ="spark.shuffle.consolidateFiles"
+
+  /**
+   * 项目配置中的常量
+   */
+  val JDBC_DRIVER= "jdbc.driver";
+  val JDBC_DATASOURCE_SIZE="jdbc.datasource.size";
+  val JDBC_URL ="jdbc.url";
+  val JDBC_USER="jdbc.user";
+  val JDBC_PASSWD="jdbc.passwd";
+  val TABLE_NAME="table.name"
+  val TABLE_NAME2="table.name2"
+
 }

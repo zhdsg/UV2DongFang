@@ -11,7 +11,15 @@ object DateUtil {
   val DT_FORMAT =new SimpleDateFormat("yyyyMMdd")
   val TIME_FORMAT =new SimpleDateFormat("yyyy-MM-dd")
   val CURRENT_DATE_FORMAT=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-
+  def getFormatTime(date:String):String= {
+    val yyyy =date.substring(0,4)
+    val mm =date.substring(4,6)
+    val dd =date.substring(6,8)
+    val hh =date.substring(8,10)
+    val ms =date.substring(10,12)
+    val ss =date.substring(12,14)
+    s"${yyyy}-${mm}-${dd} ${hh}:${ms}:${ss}"
+  }
   def getYesterdayDate(date :Date):String={
     val  cal :Calendar =Calendar.getInstance()
     cal.setTime(date)
@@ -19,7 +27,9 @@ object DateUtil {
 
     DT_FORMAT.format(cal.getTime)
   }
-
+  def getYesterdayDate(date :String):String={
+    getYesterdayDate(str2Date(date))
+  }
   /**
    * 规整格式yyyyMMdd
    * @return
@@ -89,6 +99,6 @@ object DateUtil {
     trimDate(date)
   }
   def main(args: Array[String]) {
-    println(DateUtil.str2Date(DateUtil.trimDate(new StringBuffer("2018-04-09 00:20:00").toString)).getTime/1000)
+    println("ss#".split("#")(1))
   }
 }
