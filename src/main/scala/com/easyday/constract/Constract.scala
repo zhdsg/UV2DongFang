@@ -10,7 +10,7 @@ object Constract {
   val HIVE_DATABASE ="hive.database"
   val HIVE_TABLE="hive.table"
   val TIME_INTERVAL ="time.interval"
-  val SPARK_SHUFFLE_CONSOLIDATEFILES ="spark.shuffle.consolidateFiles"
+
 
   /**
    * 项目配置中的常量
@@ -22,5 +22,14 @@ object Constract {
   val JDBC_PASSWD="jdbc.passwd";
   val TABLE_NAME="table.name"
   val TABLE_NAME2="table.name2"
+  //hadoop配置参数
+  val DFS_CLIENT_SOCKET_TIMEOUT="dfs.client.socket-timeout"
+  //spark配置参数
+  val SPARK_SHUFFLE_CONSOLIDATEFILES ="spark.shuffle.consolidateFiles"
+  val SPARK_SHUFFLE_FILE_BUFFER="spark.shuffle.file.buffer"
+  val SPARK_REDUCER_MAXSIZEINFLIGHT="spark.reducer.maxSizeInFlight"
+  val SPARK_SHUFFLE_IO_MAXRETRIES="spark.shuffle.io.maxRetries"
+  val SPARK_DEFAULT_PARALLELISM="spark.default.parallelism"
+
 
 }
