@@ -9,6 +9,7 @@ object Constract {
   val SPARK_APP_NAME = "UvAndIP2AnaylzeSpark"
   val SPARK_APP_NAME_4_APP = "UvAndIP2AnaylzeSpark4APP"
   val SPARK_APP_NAME_4_STREAMING = "PvAndUv4H5Streaming"
+  val SPARK_APP_NAME_RECOMMEND = "Recommend4Data"
   val HIVE_DATABASE ="hive.database"
   val HIVE_TABLE="hive.table"
   val TIME_INTERVAL ="time.interval"
