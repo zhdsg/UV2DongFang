@@ -19,8 +19,8 @@ public class MiddleDaoImpl implements MiddleDao {
     @Override
     public int[] getDateInsert(int dt ,Long logtime,String tableName,String tableName2) {
         final List<Object[]> lists = new ArrayList<Object[]>();
-        String sql ="select dt,logtime,qid,max(pv),max(uv),max(ip),max(incr_pv),max(incr_uv),max(incr_ip) " +
-                "from " + tableName+" where dt=? and logtime =? group by dt ,logtime,qid ";
+        String sql ="select dt,currenttime,qid,max(pv),max(uv),max(ip),max(incr_pv),max(incr_uv),max(incr_ip),max(activecnt),max(incr_activecnt) " +
+                "from " + tableName+" where dt=? and currenttime =? group by dt ,currenttime,qid ";
         Object[] params =new Object[]{dt,logtime};
         jdbcHelper.executeQuery(sql, params, new JDBCHelper.QueryCallback() {
             @Override
@@ -29,7 +29,7 @@ public class MiddleDaoImpl implements MiddleDao {
 
                     Object[] param = new Object[]{
                             rs.getInt(1), rs.getLong(2), rs.getString(3), rs.getLong(4), rs.getLong(5),
-                            rs.getLong(6), rs.getLong(7), rs.getLong(8), rs.getLong(9)
+                            rs.getLong(6), rs.getLong(7), rs.getLong(8), rs.getLong(9),rs.getLong(10),rs.getLong(11)
                     };
                     lists.add(param);
                 }
@@ -37,11 +37,11 @@ public class MiddleDaoImpl implements MiddleDao {
         });
         //logger.info("query success ....");
         String delSQL= "delete from "+tableName2
-                + " where dt =? and logtime =?";
+                + " where dt =? and currenttime =?";
         int delResult= jdbcHelper.executeUpdate(delSQL,params);
        // logger.info("delete success ....");
         String sql2 ="insert into "+tableName2
-                +"(dt,logtime,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip) values(?,?,?,?,?,?,?,?,?)";
+                +"(dt,currenttime,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip,activecnt,incr_activecnt) values(?,?,?,?,?,?,?,?,?,?,?)";
         int[] result =jdbcHelper.executeBatch(sql2,lists);
         return result;
     }

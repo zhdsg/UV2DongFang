@@ -99,6 +99,7 @@ object DateUtil {
     trimDate(date)
   }
   def main(args: Array[String]) {
-    println("ss#".split("#")(1))
+    val time :Long =1526541000.toLong * 1000
+    println("vcc".replace("aa","a"))
   }
 }

@@ -16,7 +16,7 @@ class UvAggrDaoImpl extends UvAggrDao{
 
   override def insert(logRecord: LogRecord): Int = {
       val sql =s"insert into ${ConfigurationManager.getString(Constract.H5_TABLE_NAME)} (dt,logtime,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip) " +
-        s"values (${logRecord.dt},${logRecord.logTime},'${logRecord.qId.replace("'","")}',${logRecord.PV},${logRecord.UV}" +
+        s"values (${logRecord.dt},${logRecord.currentTime},'${logRecord.qId.replace("'","")}',${logRecord.PV},${logRecord.UV}" +
         s",${logRecord.IP},${logRecord.incrPV},${logRecord.incrUV},${logRecord.incrIP}); "
 
     jdbcHelper.executeUpdate(sql )

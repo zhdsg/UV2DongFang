@@ -12,6 +12,8 @@ object Constract {
   val SPARK_APP_NAME_RECOMMEND = "Recommend4Data"
   val HIVE_DATABASE ="hive.database"
   val HIVE_TABLE="hive.table"
+  val HIVE_ACTIVE_TABLE ="hive.active.table"
+  val HIVE_H5_ACTIVE_TABLE="hive.h5.active.table"
   val TIME_INTERVAL ="time.interval"
 
 
@@ -27,6 +29,8 @@ object Constract {
   val H5_TABLE_NAME2="h5.table.name2"
   val APP_TABLE_NAME="app.table.name"
   val APP_TABLE_NAME2="app.table.name2"
+  val APP_ACTIVE_TABLE="app.active.table"
+  val APP_ACTIVE_TABLE2="app.active.table2"
   //hadoop配置参数
   val DFS_CLIENT_SOCKET_TIMEOUT="dfs.client.socket-timeout"
   //spark配置参数

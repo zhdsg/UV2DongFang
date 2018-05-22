@@ -17,8 +17,8 @@ public class Middle4AppDaoImpl implements Middle4AppDao {
     @Override
     public int[] getDateInsert(int dt ,Long logtime,String tableName,String tableName2) {
         final List<Object[]> lists = new ArrayList<Object[]>();
-        String sql ="select dt,logtime,apptypeid,qid,max(pv),max(uv),max(ip),max(incr_pv),max(incr_uv),max(incr_ip) " +
-                "from " + tableName+" where dt=? and logtime =? group by dt ,logtime,qid,apptypeid ";
+        String sql ="select dt,logtime,apptypeid,qid,max(pv),max(uv),max(ip),max(incr_pv),max(incr_uv),max(incr_ip),currenttime " +
+                "from " + tableName+" where dt=? and logtime =? group by dt ,logtime,qid,apptypeid,currenttime ";
         Object[] params =new Object[]{dt,logtime};
         jdbcHelper.executeQuery(sql, params, new JDBCHelper.QueryCallback() {
             @Override
@@ -27,7 +27,7 @@ public class Middle4AppDaoImpl implements Middle4AppDao {
 
                     Object[] param = new Object[]{
                             rs.getInt(1), rs.getLong(2), rs.getString(3), rs.getString(4), rs.getLong(5),
-                            rs.getLong(6), rs.getLong(7), rs.getLong(8), rs.getLong(9),rs.getLong(10)
+                            rs.getLong(6), rs.getLong(7), rs.getLong(8), rs.getLong(9),rs.getLong(10),rs.getString(11)
                     };
                     lists.add(param);
                 }
@@ -39,7 +39,7 @@ public class Middle4AppDaoImpl implements Middle4AppDao {
         int delResult= jdbcHelper.executeUpdate(delSQL,params);
        // logger.info("delete success ....");
         String sql2 ="insert into "+tableName2
-                +"(dt,logtime,apptypeid,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip) values(?,?,?,?,?,?,?,?,?,?)";
+                +"(dt,logtime,apptypeid,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip,currenttime) values(?,?,?,?,?,?,?,?,?,?,?)";
         int[] result =jdbcHelper.executeBatch(sql2,lists);
         return result;
     }

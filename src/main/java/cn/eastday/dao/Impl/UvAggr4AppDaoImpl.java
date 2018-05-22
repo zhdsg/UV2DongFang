@@ -19,11 +19,11 @@ public class UvAggr4AppDaoImpl implements UvAggr4AppDao {
   @Override
   public int insert(APPLogRecord appLogRecord,String tableName) {
     String sql ="insert into "+tableName
-            +" (dt,logtime,apptypeid,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip) "
-            +"values (?,?,?,?,?,?,?,?,?,?)";
+            +" (dt,logtime,apptypeid,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip,currenttime) "
+            +"values (?,?,?,?,?,?,?,?,?,?,?)";
     Object[] params =new Object[]{
             appLogRecord.dt(), appLogRecord.logTime(), appLogRecord.apptypeId(),appLogRecord.qId(), appLogRecord.PV(),appLogRecord.UV(),
-            appLogRecord.IP(),appLogRecord.incrPV(),appLogRecord.incrUV(),appLogRecord.incrIP()
+            appLogRecord.IP(),appLogRecord.incrPV(),appLogRecord.incrUV(),appLogRecord.incrIP(),appLogRecord.currenttime()
     };
     return jdbcHelper.executeUpdate(sql ,params);
   }
@@ -42,7 +42,7 @@ public class UvAggr4AppDaoImpl implements UvAggr4AppDao {
   }
   public static void main(String[] args ){
     UvAggrDao uvAggrDao = DAOFactory.getUvAggrDao();
-    uvAggrDao.insert(new LogRecord(1,2,"1",4,5,5,6,7,7),ConfigurationManager.getString(Constract.H5_TABLE_NAME()));
+    //uvAggrDao.insert(new LogRecord(1,2,"1",4,5,5,6,7,7),ConfigurationManager.getString(Constract.H5_TABLE_NAME()));
   }
 }
 

@@ -170,7 +170,7 @@ object UvAndIP2AnaylzeSpark1 {
               val incr_pv:Long = DataUtil.someOrNone(row._2._1._1._2,0)
               val incr_uv :Long= DataUtil.someOrNone(row._2._1._2 ,0)
               val incr_ip:Long = DataUtil.someOrNone(row._2._2,0)
-              LogRecord(dt.toInt,dateLineUp,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip)
+              LogRecord(dt.toInt,dateLineUp,qid,pv,uv,ip,incr_pv,incr_uv,incr_ip,0,0)
             }
           )
 
@@ -185,7 +185,7 @@ object UvAndIP2AnaylzeSpark1 {
         val tableName =ConfigurationManager.getString(Constract.H5_TABLE_NAME)
         val tableName2=ConfigurationManager.getString(Constract.APP_TABLE_NAME2)
         uvDao.delete(dt.toInt,dateLineUp,tableName)
-        uvDao.insert(LogRecord(dt.toInt,dateLineUp,"total",total_PV,total_UV,total_IP,total_PV_10m,total_UV_10m,total_IP_10m),tableName)
+        uvDao.insert(LogRecord(dt.toInt,dateLineUp,"total",total_PV,total_UV,total_IP,total_PV_10m,total_UV_10m,total_IP_10m,0,0),tableName)
 
 
         resultRDD.collect.foreach(row =>{
