@@ -1,26 +1,23 @@
 package com.easyday.spark
 
 import java.util
-import java.util.{Random, Date}
+import java.util.{Date, Random}
 
 import cn.eastday.dao.UvAggrDao
 import com.easyday.conf.ConfigurationManager
 import com.easyday.constract.Constract
 import com.easyday.dao.DAOFactory
 import com.easyday.domain.LogRecord
-import com.easyday.utils.{ETLUtil, DataUtil, DateUtil}
-
+import com.easyday.utils.{DataUtil, DateUtil, ETLUtil}
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{RowFactory, Row, Dataset, SparkSession}
+import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
-import org.apache.spark.{SparkContext, SparkConf}
-
-import scala.collection.mutable
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
  * Created by admin on 2018/4/9.
  */
-object UvAndIP2AnaylzeSpark2 {
+object UvAndIP2AnaylzeSpark3 {
    def main (args: Array[String]){
    // val logger :Logger = Logger.getLogger(UvAndIP2AnaylzeSpark2.getClass)
      if(args.length==0){
@@ -33,7 +30,7 @@ object UvAndIP2AnaylzeSpark2 {
 
     //spark 具体句柄创建
      val conf: SparkConf = new SparkConf()
-       .setAppName(Constract.SPARK_APP_NAME+"_"+args(0).substring(0,8)+"_"+args(0).substring(8,12))
+       .setAppName("xiaochengxu_"+args(0).substring(0,8)+"_"+args(0).substring(8,12))
        .set(Constract.SPARK_SHUFFLE_CONSOLIDATEFILES
             ,ConfigurationManager.getString(Constract.SPARK_SHUFFLE_CONSOLIDATEFILES))
        .set(Constract.SPARK_SHUFFLE_FILE_BUFFER
@@ -55,7 +52,6 @@ object UvAndIP2AnaylzeSpark2 {
        .config(conf)
        .enableHiveSupport()
        .getOrCreate()
-     import spark.implicits._
      // val broadcast :Broadcast[String] =sc.broadcast(dateStr.toString)
     //  logger.debug(s"spark & sparkContext  inited")
      val random =new Random()
@@ -80,21 +76,11 @@ object UvAndIP2AnaylzeSpark2 {
        //数据格式：RDD[(Row:[dateline,clientip,qid,uid])]
         var dataRDD:RDD[Row]=getData(spark,dt,dateLineDown,dateLineUp)
         dataRDD =dataRDD.persist(StorageLevel.MEMORY_ONLY)
-        val sdkRDD = dataRDD.filter(f=>{
-          var flag =false
-          val qid  =f.getString(2)
 
-          for( i <- 0 to  list.size()-1){
-            if(qid.equals(list.get(i))){
-              flag = true
-            }
-          }
-          flag
-        }).map(f => Row(f.getLong(0),f.getString(1),"sdk_total",f.getString(3))).coalesce(60)
        val xiaoChengXu =dataRDD.filter(f=>f.getString(2).equals("sharexcx")||f.getString(2).equals("xiaochengxu_dftt"))
          .map(f => Row(f.getLong(0),f.getString(1),"小程序汇总",f.getString(3))).coalesce(60)
         //val pv_sdk=sdkRDD.count()
-        var unionRDD =dataRDD.union(sdkRDD).union(xiaoChengXu).repartition(200)
+        var unionRDD =xiaoChengXu
         dataRDD=dataRDD.unpersist()
         unionRDD=unionRDD.persist()
 
@@ -148,18 +134,18 @@ object UvAndIP2AnaylzeSpark2 {
 
 
 
-        //总UV
-        val total_UV =getAggr2SumUV(groupbyUidQidRDD)
-        //groupbyUidQidRDD.unpersist()
-        val total_UV_10m=getAggr2SumUV(groupByUidQidTenMinRDD)
-        val total_IP=getAggr2SumIP(groupbyIpQidRDD)
-        //groupbyIpQidRDD.unpersist()
-        val total_IP_10m=getAggr2SumIP(groupByIpQidTenMinRDD)
-        val total_PV =groupBYqid4PvRDD.filter(f=>(!f._1.equals("sdk_total"))&&(!f._1.equals("小程序汇总")))
-          .map(row =>(row._2)).reduce(_ + _)
-        val total_PV_10m =groupBYqid4PvTenMinRDD.filter(f=>(!f._1.equals("sdk_total"))&&(!f._1.equals("小程序汇总")))
-          .map(row=>(row._2)).reduce(_ + _)
-        dataRDD=dataRDD.unpersist()
+//        //总UV
+//        val total_UV =getAggr2SumUV(groupbyUidQidRDD)
+//        //groupbyUidQidRDD.unpersist()
+//        val total_UV_10m=getAggr2SumUV(groupByUidQidTenMinRDD)
+//        val total_IP=getAggr2SumIP(groupbyIpQidRDD)
+//        //groupbyIpQidRDD.unpersist()
+//        val total_IP_10m=getAggr2SumIP(groupByIpQidTenMinRDD)
+//        val total_PV =groupBYqid4PvRDD.filter(f=>(!f._1.equals("sdk_total"))&&(!f._1.equals("小程序汇总")))
+//          .map(row =>(row._2)).reduce(_ + _)
+//        val total_PV_10m =groupBYqid4PvTenMinRDD.filter(f=>(!f._1.equals("sdk_total"))&&(!f._1.equals("小程序汇总")))
+//          .map(row=>(row._2)).reduce(_ + _)
+//        dataRDD=dataRDD.unpersist()
 
 
        //==============================active==============
@@ -240,10 +226,10 @@ object UvAndIP2AnaylzeSpark2 {
         val uvDao =DAOFactory.getUvAggrDao()
         val tableName =ConfigurationManager.getString(Constract.H5_TABLE_NAME)
         val tableName2 =ConfigurationManager.getString(Constract.H5_TABLE_NAME2)
-        uvDao.delete(dt.toInt,dateLineUp,tableName)
-        uvDao.insert(
-          LogRecord(dt.toInt,dateLineUp,"total",total_PV,total_UV,total_IP
-            ,total_PV_10m,total_UV_10m,total_IP_10m,total_UV_active,total_UV_10m_active),tableName)
+        //uvDao.delete(dt.toInt,dateLineUp,tableName)
+//        uvDao.insert(
+//          LogRecord(dt.toInt,dateLineUp,"total",total_PV,total_UV,total_IP
+//            ,total_PV_10m,total_UV_10m,total_IP_10m,total_UV_active,total_UV_10m_active),tableName)
 
 
         resultRDD.collect().foreach(
@@ -258,9 +244,9 @@ object UvAndIP2AnaylzeSpark2 {
 
 
 
-         println(s"${DateUtil.date2Str(new Date())}|uv_sum:${total_UV}  |ip_sum ${total_IP}" +
-           s" |incr_uv:${total_UV_10m} |incr_ip:${total_IP_10m} |pv_sum:${total_PV}  |incr_pv:${total_PV_10m}" +
-           s" |activecnt:${total_UV_active} |incr_activecnt:${total_UV_10m_active}")
+//         println(s"${DateUtil.date2Str(new Date())}|uv_sum:${total_UV}  |ip_sum ${total_IP}" +
+//           s" |incr_uv:${total_UV_10m} |incr_ip:${total_IP_10m} |pv_sum:${total_PV}  |incr_pv:${total_PV_10m}" +
+//           s" |activecnt:${total_UV_active} |incr_activecnt:${total_UV_10m_active}")
 
        //打印信息=======================================================================
      }catch{

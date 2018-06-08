@@ -8,10 +8,12 @@ object Constract {
   val SPARK_IS_LOCAL = "spark.islocal"
   val SPARK_APP_NAME = "UvAndIP2AnaylzeSpark"
   val SPARK_APP_NAME_4_APP = "UvAndIP2AnaylzeSpark4APP"
+  val SPARK_APP_NAME_NEWS = "UvAndIP2AnaylzeSpark4APPNews"
   val SPARK_APP_NAME_4_STREAMING = "PvAndUv4H5Streaming"
   val SPARK_APP_NAME_RECOMMEND = "Recommend4Data"
   val HIVE_DATABASE ="hive.database"
   val HIVE_TABLE="hive.table"
+  val HIVE_H5_TABLE="hive.h5.table"
   val HIVE_ACTIVE_TABLE ="hive.active.table"
   val HIVE_H5_ACTIVE_TABLE="hive.h5.active.table"
   val TIME_INTERVAL ="time.interval"
@@ -31,6 +33,8 @@ object Constract {
   val APP_TABLE_NAME2="app.table.name2"
   val APP_ACTIVE_TABLE="app.active.table"
   val APP_ACTIVE_TABLE2="app.active.table2"
+  val APP_NEWS_TABLE="app.news.table"
+  val APP_NEWS_TABLE2="app.news.table2"
   //hadoop配置参数
   val DFS_CLIENT_SOCKET_TIMEOUT="dfs.client.socket-timeout"
   //spark配置参数

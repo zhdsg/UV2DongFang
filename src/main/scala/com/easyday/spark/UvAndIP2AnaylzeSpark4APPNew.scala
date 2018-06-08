@@ -1,14 +1,13 @@
 package com.easyday.spark
 
-import java.util.{Date, Random}
+import java.util.Date
 
-import cn.eastday.dao.{UvAggr4AppDao, UvAggrDao}
+import cn.eastday.dao.UvAggr4AppDao
 import com.easyday.conf.ConfigurationManager
 import com.easyday.constract.Constract
 import com.easyday.dao.DAOFactory
-import com.easyday.dao.impl.UvAggrDaoImpl
-import com.easyday.domain.{APPLogRecord, LogRecord}
-import com.easyday.utils.{ETLUtil, DataUtil, DateUtil}
+import com.easyday.domain.APPLogRecord
+import com.easyday.utils.{DataUtil, DateUtil, ETLUtil}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, Row, SparkSession}
 import org.apache.spark.storage.StorageLevel
@@ -17,7 +16,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 /**
  * Created by admin on 2018/4/9.
  */
-object UvAndIP2AnaylzeSpark4APP {
+object UvAndIP2AnaylzeSpark4APPNew {
    def main (args: Array[String]){
    // val logger :Logger = Logger.getLogger(UvAndIP2AnaylzeSpark2.getClass)
      if(args.length==0){
@@ -30,7 +29,7 @@ object UvAndIP2AnaylzeSpark4APP {
 
     //spark 具体句柄创建
      val conf: SparkConf = new SparkConf()
-       .setAppName(Constract.SPARK_APP_NAME_4_APP+"_"+args(0).substring(0,8)+"_"+args(0).substring(8,12))
+       .setAppName(Constract.SPARK_APP_NAME_NEWS+"_"+args(0).substring(0,8)+"_"+args(0).substring(8,12))
        .set(Constract.SPARK_SHUFFLE_CONSOLIDATEFILES
             ,ConfigurationManager.getString(Constract.SPARK_SHUFFLE_CONSOLIDATEFILES))
        .set(Constract.SPARK_SHUFFLE_FILE_BUFFER
@@ -39,12 +38,7 @@ object UvAndIP2AnaylzeSpark4APP {
             ,ConfigurationManager.getString(Constract.SPARK_REDUCER_MAXSIZEINFLIGHT))
        .set(Constract.SPARK_SHUFFLE_IO_MAXRETRIES
             ,ConfigurationManager.getString(Constract.SPARK_SHUFFLE_IO_MAXRETRIES))
-//       .set(Constract.SPARK_DEFAULT_PARALLELISM
-//            ,ConfigurationManager.getString(Constract.SPARK_DEFAULT_PARALLELISM))
-      // .set("spark.shuffle.manager","hash")
-        //.set("spark.shuffle.sort.bypassMergeThreshold","550")
-        //.set("spark.shuffle.memoryFraction","0.2")
-        //.set("spark.storage.memoryFraction","0.5")
+
 
 
      val sc: SparkContext = SparkContext.getOrCreate(conf)
@@ -53,9 +47,7 @@ object UvAndIP2AnaylzeSpark4APP {
            .config(conf)
            .enableHiveSupport()
            .getOrCreate()
-     // val broadcast :Broadcast[String] =sc.broadcast(dateStr.toString)
-    //  logger.debug(s"spark & sparkContext  inited")
-     //val random =new Random()
+
      val upLine :Long=DateUtil.str2Date(DateUtil.trimDate(dateStr.toString)).getTime/1000
      val downLine:Long =upLine-600
 
@@ -69,9 +61,6 @@ object UvAndIP2AnaylzeSpark4APP {
      }
       //val dateTime =new Date().getTime
      try {
-       //模拟数据
-       //mockData(spark)
-
        //数据格式：RDD[(Row:[dateline,clientip,appqid,apptypeid,clientime ])]
         var dataRDD:RDD[Row]=getData(spark,dt,dateLineDown,dateLineUp)
         dataRDD =dataRDD.persist(StorageLevel.MEMORY_ONLY)
@@ -101,7 +90,6 @@ object UvAndIP2AnaylzeSpark4APP {
         //公共RDD持久化
         dataTenMinRDD=dataTenMinRDD.persist(StorageLevel.MEMORY_ONLY)
 
-
         //聚合distinct
         var groupByUidQidTenMinRDD: RDD[((String,String,String), Long)]= distinctByUIdAndQId(dataTenMinRDD)
 
@@ -124,10 +112,6 @@ object UvAndIP2AnaylzeSpark4APP {
         groupBYqid4PvRDD=groupBYqid4PvRDD.persist(StorageLevel.MEMORY_ONLY)
         var groupBYqid4PvTenMinRDD:RDD[((String,String),Long)] =getAggr2qid4PvRDD(groupByUidQidTenMinRDD)
         groupBYqid4PvTenMinRDD=groupBYqid4PvTenMinRDD.persist(StorageLevel.MEMORY_ONLY)
-        //println(s"${DateUtil.date2Str(new Date())} qid4PvRDD has been computed ...........")
-        //logger.info(s"${DateUtil.date2Str(new Date())} qid4PvRDD has been peristed ...........")
-
-
 
         //总UV
         val total_UV :RDD[(String,Long)]=getAggr2SumUV(groupbyUidQidRDD)
@@ -187,28 +171,13 @@ object UvAndIP2AnaylzeSpark4APP {
             }
           }
         dataRDD.unpersist()
-//        resultRDD.foreachPartition(partition =>{
-//         val uvdao :UvAggrDaoImpl =DAOFactory.getUvAggrDao()
-//            while(partition.hasNext){
-//              val row =partition.next()
-//              uvdao.insert(row)
-//            }
-//        })
+
         //插入mysql数据库
         val uv4AppDao =DAOFactory.getUvAggr4AppDao()
-        val tableName =ConfigurationManager.getString(Constract.APP_TABLE_NAME)
-        val tableName2 =ConfigurationManager.getString(Constract.APP_TABLE_NAME2)
+        val tableName =ConfigurationManager.getString(Constract.APP_NEWS_TABLE)
+        val tableName2 =ConfigurationManager.getString(Constract.APP_NEWS_TABLE2)
         uv4AppDao.delete(dt.toInt,dateLineUp,tableName)
-        //
-//        resultRDD.union(resultTotalRDD).foreachPartition(
-//          iter => {
-//            val uv4Appdao1: UvAggr4AppDao = DAOFactory.getUvAggr4AppDao()
-//            iter.map {
-//              case (row) => {
-//                uv4Appdao1.insert(row, tableName)
-//              }
-//            }
-//          })
+
         resultRDD.union(resultTotalRDD).collect().foreach(
           row => {
             val uv4Appdao1: UvAggr4AppDao = DAOFactory.getUvAggr4AppDao()
@@ -219,84 +188,6 @@ object UvAndIP2AnaylzeSpark4APP {
         mid4AppDao.getDateInsert(dt.toInt,dateLineUp,tableName,tableName2)
 
 
-
-        val activeRDD =getDataForActive(spark,dt,dateLineDown,dateLineUp)
-         activeRDD.persist()
-
-        val groupbyIpQidRDDForActive: RDD[((String,String,String), Long)] = distinctByUIdAndQId(activeRDD)
-        groupbyIpQidRDDForActive.persist()
-
-        val dataTenMinRDDForActive =activeRDD.filter(
-            row=>{
-            val dateline:Long =row.getLong(0)
-            if(dateline <= upLine && dateline >downLine  ){
-              true
-            }else{
-              false
-            }
-          }
-        )
-
-        dataTenMinRDDForActive.persist()
-
-
-        val groupByUidQidTenMinRDDForActive: RDD[((String,String,String), Long)] = distinctByUIdAndQId(dataTenMinRDDForActive)
-        groupByUidQidTenMinRDDForActive.persist()
-        val groupBYqid4UvRDDForActive:RDD[((String,String),Long)]=getAggr2qidRDD(groupbyIpQidRDDForActive)
-        val groupBYqid4UvTenMinRDDForActive:RDD[((String,String),Long)]=getAggr2qidRDD(groupByUidQidTenMinRDDForActive)
-        val total_UV_active :RDD[(String,Long)]=getAggr2SumUV(groupbyIpQidRDDForActive)
-        val total_UV_10m_active:RDD[(String,Long)]=getAggr2SumUV(groupByUidQidTenMinRDDForActive)
-        groupbyIpQidRDDForActive.unpersist()
-        groupByUidQidTenMinRDDForActive.unpersist()
-
-        val resultRDDForActive = groupBYqid4UvRDDForActive.leftOuterJoin(groupBYqid4UvTenMinRDDForActive)
-          .map{
-          case ((apptypeid,qid),(uv,isZero_incr_uv))=>{
-            var qid_new  = ""
-            if (qid.length > 50) {
-              qid_new = qid.substring(0, 50)
-            } else {
-              qid_new = qid
-            }
-            var apptypeId_new = ""
-            if (apptypeid.length > 20) {
-              apptypeId_new = apptypeid.substring(0, 20)
-            } else {
-              apptypeId_new = apptypeid
-            }
-            val incr_uv =DataUtil.someOrNone(isZero_incr_uv,0)
-            APPLogRecord(dt.toInt, dateLineUp, apptypeId_new, qid_new, 0, uv, 0, 0, incr_uv, 0
-              ,DateUtil.date2Str(new Date(dateLineUp*1000)))
-          }
-        }
-
-        val resultTotalRDDForActive = total_UV_active.leftOuterJoin(total_UV_10m_active)
-          .map{
-          case ((apptypeid),(uv,isZero_incr_uv))=>{
-            var apptypeId_new = ""
-            if (apptypeid.length > 20) {
-              apptypeId_new = apptypeid.substring(0, 20)
-            } else {
-              apptypeId_new = apptypeid
-            }
-            val incr_uv =DataUtil.someOrNone(isZero_incr_uv,0)
-            APPLogRecord(dt.toInt, dateLineUp, apptypeId_new, "total", 0, uv, 0, 0, incr_uv, 0
-              ,DateUtil.date2Str(new Date(dateLineUp*1000)))
-          }
-        }
-        val active_table =ConfigurationManager.getString(Constract.APP_ACTIVE_TABLE)
-        val active_table2 =ConfigurationManager.getString(Constract.APP_ACTIVE_TABLE2)
-        val activeJdbcHelperForDelete = DAOFactory.getUvAggr4AppDao()
-        activeJdbcHelperForDelete.delete(dt.toInt,dateLineUp,active_table)
-        activeRDD.unpersist()
-        resultRDDForActive.union(resultTotalRDDForActive).collect().foreach(
-           row => {
-             val activeJdbcHelper = DAOFactory.getUvAggr4AppDao()
-              activeJdbcHelper.insert(row,active_table)
-            }
-          )
-        val mid4AppDaoForActive =DAOFactory.getMiddle4AppDao()
-        mid4AppDaoForActive.getDateInsert(dt.toInt,dateLineUp,active_table,active_table2)
      }catch{
        case e :Exception => {
         e.printStackTrace()
@@ -334,9 +225,10 @@ object UvAndIP2AnaylzeSpark4APP {
     strBuild.append(
       s"select dateline,clientip,appqid,apptypeid,clientime  from " +
       s"${ConfigurationManager.getString(Constract.HIVE_TABLE)} " +
-      s"where dt ='${dt}' "
+      s"where dt ='${dt}' " +
+        s"AND urlto LIKE 'http%' AND urlto NOT LIKE 'http%video%' AND urlto NOT LIKE 'http%picture%' AND urlto NOT LIKE 'http%douyin%'"
 //        +
-//        s"and UPPER(apptypeid) like '%TT%' and (clientime)"
+
 
       )
       strBuild.append(s"and dateline <='${dateLineUp}' " +
@@ -345,11 +237,30 @@ object UvAndIP2AnaylzeSpark4APP {
     val sql =strBuild.toString()
     println(sql)
     val data: Dataset[Row] = spark.sql(sql).coalesce(300)
-    val  dataRDD =data.rdd.filter(
+    val  dataRDD =data.rdd.map(f=>{
+      val dateLine =f.getLong(0)
+      val ip =f.getString(1)
+      var qid =f.getString(2)
+      var apptypeid =f.getString(3)
+      var clientime =f.getString(4)
+      if(apptypeid == null){
+        apptypeid="null"
+      }
+      apptypeid=apptypeid.toUpperCase()
+      if(clientime==null ){
+        clientime="null"
+      }
+      if(qid ==null ){
+        qid ="null"
+      }else{
+        qid =ETLUtil.trimDate(qid.replace("h5bt","h5"))
+      }
+      Row(dateLine,ip,qid,apptypeid,clientime)
+    }).filter(
       row =>{
         val clientIme =row.getString(4)
 
-        if(clientIme ==null||clientIme.equals("null")){
+        if(clientIme ==null||clientIme.trim.equals("null")||clientIme.trim.equals("")){
           false
         }else{
           true
@@ -358,89 +269,17 @@ object UvAndIP2AnaylzeSpark4APP {
 
     ).filter(row=>{
       val apptypeid =row.getString(3)
-      if(apptypeid==null || !apptypeid.toUpperCase().contains("TT")){
-        false
-      }else{
+
         if(apptypeid.toLowerCase().equals("huitt")){
           false
         }else{
           true
         }
-      }
+
     }).filter(row => ETLUtil.filter(row.getString(2))).repartition(100)
     dataRDD
 
   }
-
-  /**
-   *
-   * @param spark
-   * @param dt
-   * @param dateLineDown
-   * @param dateLineUp
-   * @return
-   */
-  def getDataForActive(spark:SparkSession  ,dt:String,dateLineDown:Long,dateLineUp:Long):RDD[(Row)]={
-
-
-    spark.sqlContext.setConf("hive.merge.mapfiles","true")
-    spark.sqlContext.setConf("mapred.max.split.size","536870912")
-    spark.sqlContext.setConf("mapred.min.split.size.per.node","536870912")
-    spark.sqlContext.setConf("mapred.min.split.size.per.rack","536870912")
-    spark.sqlContext.setConf("hive.input.format","org.apache.hadoop.hive.ql.io.CombineHiveInputFormat")
-    val strBuild =new StringBuilder("")
-    spark.sql(s"use ${ConfigurationManager.getString(Constract.HIVE_DATABASE)}")
-    //
-    strBuild.append(
-      s"select dateline,uid,qid,softname,softid  from " +
-        s"${ConfigurationManager.getString(Constract.HIVE_ACTIVE_TABLE)} " +
-        s"where dt ='${dt}' "
-
-    )
-    strBuild.append(s"and dateline <='${dateLineUp}' " +
-      s"and dateline >='${dateLineDown}'")
-
-    val sql =strBuild.toString()
-    println(sql)
-    val data: Dataset[Row] = spark.sql(sql).coalesce(300)
-    val  dataRDD =data.rdd.map(f=>{
-      val dateLine =f.getLong(0)
-      val uid =f.getString(1)
-      var qid =f.getString(2)
-      var softname =f.getString(3)
-      var softid =f.getString(4)
-      if(softid ==null){
-        softid="null"
-      }
-      if(softname==null ){
-        softname="null"
-      }
-      if(qid ==null ){
-        qid ="null"
-      }else{
-        qid =ETLUtil.trimDate(qid.replace("h5bt","h5"))
-      }
-      var apptypeid =""
-      if(softname.equals("gsbrowser") ||softname.equals("ltbrowser")){
-       apptypeid=softname
-      }else{
-        var length =0
-        if(softid.contains("Android")){
-          length =7
-        }else if(softid.contains("IOS")){
-          length=3
-        }else{ length=0 }
-
-        apptypeid=softid.substring(0,softid.length-length)
-      }
-
-      Row(dateLine,null,qid,apptypeid,uid)
-    }).filter(row => ETLUtil.filter(row.getString(2))).repartition(100)
-    dataRDD
-
-  }
-
-
 
   /**
    * 数据去重< ime!typeid@qid ,1>
